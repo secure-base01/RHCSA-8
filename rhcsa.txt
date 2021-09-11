@@ -1,0 +1,283 @@
+Do I Know This Already?
+Define Key Terms
+Review Questions
+Labs
+Practice Exams
+Memory Tables
+Remember FSH
+Review awk/sed basics
+Sftp commands, remote rsync, and scp commands
+If (practical) Linux admins need something like AD do they use AD or what?
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=
+=> CHAPTER 2: USING ESSENTIAL TOOLS
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=
+
+Note: A device file on Linux is a file that is used to access specific hardware. Your hard disk, for instance, can be referred to as /dev/sda, the console of 
+      your server is known as /dev/console or /dev/tty1, 
+Note: bash-completion is the software package that does the bash completion. (maybe an add-on package for more advanced completion, not sure)
+
+EXECUTING COMMANDS:
+
+-- Typically, command syntax has three basic parts: the command, its options, and its arguments.
+
+-- The purpose of the Linux shell is to provide an environment in which commands can be executed. The shell makes a distinction between three kinds of 
+   commands: Aliases, Bash Internal commands, and External commands. An internal command is a command that is a part of the shell itself and thus doesn’t have to 
+   be loaded from disk separately. An external command is a command that exists as an executable file on disk. Because it has to be read from disk the first it is a bit slower. When a user executes a command, the shell first looks to determine whether it is an bash internal command; if it is not, it looks for an executable file with a name that matches the command on disk. 
+*  To find out whether a command is an alias, bash internal, or executable file on disk, you can use the type command. An example why this could be important to know is e.g. there’s two time commands.One is an internal bash command, the other is an external command. So when you run time without a complete file path, it's using the internal bash command. And both commands are quite different.
+
+-- For security reasons the current directory is not in the $PATH variable which is why you need to start a script that's in the CWD with ./
+*  Remember $PATH for the root user has additional administration commands.
+
+
+
+
+
+I/O REDIRECTION:
+
+
+-- STDIN (< or 0> ; file descriptor 0), STDOUT (> or 1>; file descriptor 1), STDERR (2>; file descriptor 2)
+*  someCommandThatWillFail > errorFile 2>&1 (Redirects STDERR to the same destination as STDOUT). So if there are any errors then it will get outputted to errorFile. Look at it as &1 as changing 2> to 1>
+*  ls ilwehgi Documents 2> /dev/null > newFile
+*  In this command, you redirect STDERR to /dev/null while sending STDOUT to a file with the name newFile
+
+-- Programs started from the CLI have no idea what they are reading from or writing to. They just read from “file descriptor 0” if they want to read from STDIN, and they write to file descriptor number 1 to display STDOUT, and to file descriptor 2 if they have error messages to be displayed.  By default, these file descriptors are connected to the keyboard and the screen. But if you use redirection symbols such as <, >, and |, the shell connects the file descriptors to files or other commands. You can also redirect to device files. And if you want to discard a command’s output, you can redirect to /dev/null.
+
+
+
+
+
+HISTORY:
+
+-- Bash is configured by default to keep the last 1,000 commands a user used (and if the shell session is never closed, the exact number can grow beyond that!). When a shell session is closed, the history of that session is updated to the history file. The name of this file is ~/.bash_ history. Until then all history commands are kept in memory.
+*  In some cases it might be necessary to wipe the Bash history. This capability is useful, for instance, if you’ve typed a password in clear text by accident. If that happens, you can type history -c to clear the current history from memory. So commands from this session won’t be written to the history file when you exit the current session. If you want to remove the complete Bash history, type history -w immediately after using history -c, which will overwrite the ~/.bash_history with the current history (which has nothing after running history -c).
+*  Instead of history -w can also just remove ~/.bash_history
+-- Use ^r to open the prompt from which you can search your history easily. Keep pressing it to cycle through more matches.
+*  Type !number to execute a command with a specific number from history.
+*  Type !sometext to execute the last command that starts with sometext. Don't even have to type the complete command, it will execute the 1st match.
+
+
+
+
+
+UNDERSTANDING THE SHELL ENVIRONMENT:
+
+Note: The system environment variables are no different from variables you make yourself when scripting, their just variables!
+*     mkdir /home/$USER/files (not only good in scripting, good also for simply CLU use
+
+
+-- When you are working from a shell, an environment is created to ensure that all that is happening is happening the right way. This environment consists of variables that define the user environment, such as the $PATH variable. The Linux shell environment consists of many variables. Variables are fixed names that can be assigned dynamic values. An example of a variable is $LANG, which in my shell is set to en_US.UTF-8. The advantage of working with variables for scripts and programs is that the program only has to use the name of the variable without taking interest in the specific value that is assigned to the variable. Because different users have different needs, the variables that are set in a user environment will differ. To get an overview of the current variables defined in your shell environment, type the env command, which will show environment variables. 
+
+-- To define a variable, you SHELL=/bin/bash but that will only set for the current terminal  session. And to read the value of a variable you echo $SHELL.  If you want to set it permanently, then know that when a user logs in, an environment is created for that user automatically. This happens based on four different configuration files where variables can be defined to set them permanently.
+*  /etc/profile: This is the generic file that is processed by all users upon login.
+*  /etc/bashrc: This file is processed when subshells are started.
+*  ~/.bash_profile: In this file, user-specific login shell variables can be defined.
+*  ~/.bashrc: In this user-specific file, subshell variables can be defined.
+
+-- A distinction is made between a login shell and a subshell. A login shell is the first shell that is opened for a user after the user has logged in. From the login shell, a user may run scripts, which will start a subshell of that login shell. Bash allows for the creation of a different environment in the login shell and in the subshell, but to make sure the same settings are used in all shells, it’s a good idea to include subshell settings in the login shell as well.
+
+
+
+
+
+USING /ETC/MOTD AND /ETC/ISSUE:
+
+-- Using /etc/motd can be a convenient way for system administrators to inform users about an issue or a security policy after they logged in. Another way to send information to users is by using /etc/issue. The contents of this file display before the user logs in. Using this file provides an excellent means of specifying specific login instructions to users who are not logged in yet.
+
+
+
+
+
+USING MAN AND /USR/SHARE/DOC:
+
+Tip: Do not try to memorize all the commands that you need to accomplish specific tasks. Instead, memorize how to find these commands and find which man page to read to get more information about the command. 
+
+-- man -k is a super useful command to find all potentially related manual pages for some command. Which is why I made the script to grep all keywords throughout the outputed man pages. man -k consults the mandb database. This database is automatically created through a cron scheduled job. If  you ever get the message “nothing appropriate.” you might need to update the mandb database. Doing that is easy: Just run the mandb command as root without any arguments. It will see whether new man pages have been installed and update the mandb database accordingly.
+*  man 7 hier (displays the Filesystem Hierarchy Standard. Refer to this is you want to know what some system directory or file is about)
+*  use man -f someCommand to print only the description
+
+-- There are also sections in the man page that provide in-depth details about your Linux system, such as the sections about system calls and library calls.
+
+-- Another source of information consists of files that are sometimes copied to the /usr/share/doc directory. 
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=-=-=
+=> CHAPTER 3: ESSENTIAL FILE MANAGEMENT
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=-=-=
+
+-- The Linux filesystem hierarchy maybe distributed over different devices and even computer systems that are mounted into the root directory. There are several disadvantages to storing all files in just one file system, which gives several good reasons to work with multiple mounts:
+*  High activity in one area may fill up the entire file system, which will negatively impact services running on the server.
+*  If all files are on the same device, it is difficult to secure access and distinguish between different areas of the file system with different security needs. By mounting a separate file system, you can add mount options to meet specific security needs.
+*  If a one-device file system is completely filled, it may be difficult to make additional storage space available.
+   To avoid these pitfalls, it is common to organize Linux file systems in different devices (and even shares on other computer systems), such as disk partitions and logical volumes, and mount these devices into the file system hierarchy.
+-- Some directories are commonly mounted on dedicated devices: 
+*  Apart from these directories, you may find servers that have other directories that are mounted on dedicated partitions or volumes also.
+   /boot: This directory is often mounted on a separate device because it requires essential information your computer needs to boot. Because the root directory (/) is often on a LVM, from which Linux cannot boot by default, the kernel and associated files need to be stored separately on a dedicated /boot device.
+   /var: This directory is often on a dedicated device because it grows in a dynamic and uncontrolled way (for example, because of the log files that are written to /var/log). By putting it on a dedicated device, you can ensure that it will not fill up all storage on your server. (A good reason for a dedicated WORM device)
+   /home: This directory often is on a dedicated device for security reasons. By putting it on a dedicated device, you can mount it with specific options, such as noexec and nodev, to enhance the security of the server. When you are reinstalling the operating system, it is an advantage to have home directories in a separate file system. The home directories can then survive the system reinstall. 
+   /usr: This directory contains operating system files only, to which normal users normally do not need any write access. Putting this directory on a dedicated device allows administrators to configure it as a read-only mount.
+
+
+
+
+
+MOUNT COMMANDS:
+
+-- mount (gives an overview of all mounted devices)
+-- df -Th (show available disk space on mounted devices; it includes most of the system mounts. because it will look on all mounted file systems, it is a convenient command to get an overview of current system mounts.)
+-- findmnt (shows mounts and the relationship that exists between the different mounts
+*  because the output of the mount command is a bit overwhelming, you may like the output of findmnt. 
+-- ls c[auo]t (would match cat, cut, and cot)
+*  ls c[a-o] (can do that too)
+*  ls -lrt (shows commands sorted on modification date. You’ll see the most recently modified files last in the list. This is a very useful command.)
+
+
+
+
+
+COPYING FILES AND DIRECTORIES:
+
+-- cp -a (keep current permissions and copies recursively; should be the goto cp command instead of cp -r)
+*  cp /somedir/.* /tmp (copies all hidden files to /tmp)
+*  cp -a /somedir/. /tmp (copies all files, regular and hidden, to /tmp)
+
+
+
+
+
+UNDERSTANDING HARD LINKS:
+
+Keynote: Modifying a hard link or soft link will affect all links including the original file. And when you delete the original file the hard links will still exist, but that's not the case for soft links. So the only advantage hard links have over softlinks is the redundancy in that there’s no single point of failure for data loss. Whereas soft links if you remove the original file, then all the links are gone. Also soft links enable you to link directories, whereas hard links only work with files.
+Keynote: Think of hard/soft links as simply copied files that can update each other. I.e. any edit to one will affect the others.
+Keynote: Can make soft links across a network I think, and use that for real time chat. Also I think you can make some sort of backup system with soft links probably?
+Keynote: Hard Links are the names you give files. A filename is basically a hardlink, the only difference is you are linking the name to a different location.
+
+-- Links on Linux are like aliases that are assigned to a file. To understand a link, you need to know a bit about how the Linux file system uses inodes for file system administration. Linux stores administrative data about files in inodes. The inode is used to store all administrative data about files. Every file on Linux has an inode where important information about the file is stored:
+
+1. The data block where the file contents are stored
+2. The creation, access, and modification date
+3. Permissions
+4. File owners
+
+
+Just one important piece of information is NOT stored in the inode: the name of the file. Names are stored in the directory, and each filename knows which inode it has to look up to access further file information. Also it’s interesting to know that an inode does not know which filename it has; it just knows how many names are associated with it. These names are referred to as hard links.
+
+
+-- When you create a file, you give it a name. Basically, this name is a hard link. On a Linux file system, multiple hard links can be created to a file. 
+
+
+Some restrictions apply to hard links:
+
+
+1. Hard links must exist all on the same device (partition, logical volume, etc).
+2. You cannot create hard links to directories.
+3. When the last hard link to a file is removed, access to the file’s data is also removed.
+
+
+
+
+UNDERSTANDING SOFT (SYMBOLIC) LINKS:
+
+-- A symbolic link does not link directly to the inode but to the name of the file. This makes symbolic links much more flexible, in that they can link to files on other devices, as well as on other directories. The major disadvantage is that when the original file is removed, the symbolic link becomes invalid and does not work any longer.
+-- In the output of the ls -l command, if the first character is an l then the file is a symbolic link.
+   If a file is a symbolic link, the output of ls -l shows the name of the item it links to after the filename. If a file is a hard link, ls -l shows the hard link counter which is the amount of total hard links, including the original file)
+
+
+
+
+
+WORKING WITH ARCHIVES AND COMPRESSED FILES:
+
+Tip: It is good practice to create archive files with an extension such as .tar or .tgz so that they can be easily recognized, but not everyone does that. To find out you can type file somefile.
+Important: You have to be able to perform 4 important tasks with tar on the RHCSA exam:
+1. Create an archive
+2. List the contents of an archive
+3. Extract an archive
+
+-- tar -cvf archivename.tar files-you-want-to-archive command (create an archive)
+*  include -z (gunzip) to compress the archive
+*  tar -rvf archivename.tar files-you-want-to-archive command (appends files to an existing archive)
+*  tar -uvf archivename.tar files-you-want-to-archive command (update a currently existing archive file to write new files or newer versions of files in to the archive)
+*  tar -tvf archivename.tar (list the contents of the tar archive)
+*  GOOD COMMAND TO LIST FILES IN /USR/SHARE/DOC WHICH MAY BE COMPRESSED TAR BALLS
+*  tar -xvf archivename.tar -C targetDir (extract the archive)
+*  tar -xvf archivename.tar file-you-want-to-extract (extract a specific file out of the archive)
+*  tar -xvf etc.tar -C /tmp etc/passwd (extracts the password file from etc.tar to the /tmp directory
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=
+=> CHAPTER 4: WORKING WITH TEXT FILES
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=
+
+head -n 11 /etc/passwd | tail -n 1 (print only line number 11)
+* Can also do this with sed
+cut -f 1 -d : /etc/passwd (print out the first field, using : as the field delimiter)
+* Can also do this with awk
+ sort -rn (useful to sort output of something in reverse order)
+You can also use the sort command and specify which column you want to sort. To do this, use sort -k3 -t : /etc/passwd, for instance, which uses the field separator : to sort the third column of the /etc/passwd file.
+To sort the output of this command directly on the second column, use the command ps aux | sort -k2.
+For instance, the regular expression r[aou]t matches the strings rat, rot, and rut.
+If you know exactly how many of the previous characters you are looking for, you can specify a number also, as in re\{2\}d, which would match reed, but not red. \{1,3\}Matches a minimum of one and a maximum of three of the previous character.
+colou?r Matches zero or one of the previous characters. This makes the PREVIOUS character optional, which in this example would match both color and colour.
+“web(.*)?” (this is pretty useful, it matches for that regex, but combined with ? making it optional)
+ type grep -v '^#' ~/some_script.sh (shows only lines that dont start with a # sign, the -v inverts the match)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=
+=> CHAPTER 5: CONNECTING TO RHEL 8 
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=
+
+Note: su - opens one root shell only, while you will still be an ordinary user in all other parts of your current session.
+Note: Because terminals are opened as a subshell, you do not have to log in to each terminal again.
+Note: The virtual terminal lines (vty) are virtual lines that allow connecting to the device using telnet or Secure Shell (SSH). Cisco devices can have up to 16 VTY lines. ... These lines can be used to connect terminals or models to the device.
+
+-- In a non-graphical environment, you have only one terminal interface available. But you can use virtual terminals to open six different terminal windows from the same console at the same time and use key sequences to navigate between them. To open these terminal windows, you can use the key sequences Alt-F1 through Alt-F6. A convenient alternative to using the Alt-Function key sequences is offered by the chvt command. This command enables you to switch to a different virtual environment directly from the current environment. If you are in a graphical console right now, open a terminal and type chvt 4. This brings you to a login prompt on virtual terminal 3. Switch back to the graphical environment using the chvt 3 command, or use chvt 1 to switch back to a graphical login prompt.Switching Between Terminals in a Graphical Environment
+*  F1: Gives access to the GNOME Display Manager (GDM) graphical loginF2: Provides access to the current graphical console
+*  F3: Gives access back to the current graphical session
+*  F4–F6: Gives access to nongraphical consoles
+
+
+
+
+
+BOOTING, REBOOTING, AND SHUTTING DOWN SYSTEMS:
+
+-- As an administrator of a Linux server, you occasionally have to reboot the Linux server. Rebooting a server is not often a requirement, but it can make your work a lot easier because it will make sure that all processes and tasks that were running on your server have reread their configurations and initialized properly. But for an administrator who really knows Linux very thoroughly, rebooting a server is seldom necessary. Experienced administrators can often trigger the right parameter to force a process to reread its configurations. E.g.:
+*  To recover from serious problems such as server hangs and kernel panics
+*  To apply kernel updates
+*  To apply changes to kernel modules that are being used currently and therefore cannot be reloaded easily
+
+When a server is rebooted, all processes that are running need to shut down properly. If the server is just stopped by pulling the power plug, much data will typically be lost. The reason is that processes that have written data do not typically write that data directly to disk, but instead store it in memory buffers (cache) from where it is committed to disk when it is convenient for the operating system.
+
+-- systemctl reboot or reboot
+*  systemctl poweroff or poweroff
+*  If these commands don't work you can force a machine to reset. As root type echo b > /proc/sysrq-trigger. This command immediately resets the machine without saving anything. Notice that this command should be used only if there are no other options!
+
+
+
+
+
+USING SSH AND RELATED UTILITIES:
+
+-- To access a server using SSH, you need to make sure that on the remote server you want to access, the sshd service is running with port 22 open, and it should not be blocked by the firewall. After installation RHEL starts the sshd process automatically, and by default it is not blocked by the firewall. The ssh command by default tries to reach the sshd process on the server port 22. If you have configured the sshd process to offer its services on a different port, use ssh -p followed by the port number you want to connect to. Before being prompted for a password, you see a message indicating that the authenticity of host 192.168.4.220 cannot be established. This message is shown because the host you are connecting to is not yet known on your current host, which might involve a security risk. But after you connect to the remote server, a public key fingerprint is stored in the file ~/.ssh/known_hosts. The next time you connect to the same server, this fingerprint is checked with the encryption key that was sent over by the remote server to initialize contact. If the fingerprint matches, you will not see this message anymore.
+
+-- From an SSH session, by default you cannot start graphical applications. The easiest way to allow the remote host to display graphical screens on your computer is by adding the -Y option to the ssh command. So, use ssh -Y linda@server if you want to connect as linda to server2, and also be able to start graphical applications.
+*  as an administrator, you can also create a systemwide configuration that allows you to use X forwarding, which is starting graphical applications through an SSH session. As root, open the configuration file /etc/ssh/ssh_config and make sure it includes the following line: ForwardX11 yes
+
+-- The only thing you need to do to enable key-based login is to create a key pair; everything else is organized by default already. When using public/private key-based authentication, the user who wants to connect to a server generates a public/private key pair. The private key needs to be kept private and will never be distributed. The public key is stored in the home directory of the target user on the SSH server in the file .ssh/authorized_keys. When authenticating using key pairs, the user generates a hash derived from the private key. This hash is sent to the server, and if on the server it proves to match the public key that is stored on the server, the user is authenticated.
+*  When creating a public/private key pair, you are prompted for a passphrase. If you want maximal security, you should enter a passphrase. You are prompted for that passphrase each time that you are using the private key to authenticate to a remote host. That is very secure, but it is not very convenient. To create a configuration that allows for maximal convenience, you can just press the Enter key twice to confirm that you do not want to set a passphrase. This is a typical configuration that is used for authentication between servers in a trusted environment where no outside access is possible anyway.
+*  To create a key pair, use the ssh-keygen command. The ssh-copy-id command is next used to copy the public key over to the target server
+
+
+
+
+
+OTHER SSHD RELATED FILE TRANSFER COMMANDS (RSYNC, SCP, and SFTP)
+
+Note: rsync -X Synchronizes SELinux context as well
+
+-- If a host is running the sshd service, that service can also be used to securely transfer files between systems. To do that, you can use the scp command if you want the file to be copied, or rsync if you want to synchronize the file. Also, the sftp command is a part of the SSH solution and enables users to use an FTP command-line syntax to transfer files using sshd.
+
+-- scp -r userName@server:~/somedir ~ (copy someDir from a remote pc to your local home)
+
+-- The sftp command provides an FTP-like interface. You use typical FTP client options, like put to upload a file or get to download a file.
+
+
+Using Passphrases or Not?
