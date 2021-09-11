@@ -23,8 +23,12 @@ EXECUTING COMMANDS:
 
 -- The purpose of the Linux shell is to provide an environment in which commands can be executed. The shell makes a distinction between three kinds of 
    commands: Aliases, Bash Internal commands, and External commands. An internal command is a command that is a part of the shell itself and thus doesn’t have to 
-   be loaded from disk separately. An external command is a command that exists as an executable file on disk. Because it has to be read from disk the first it is a bit slower. When a user executes a command, the shell first looks to determine whether it is an bash internal command; if it is not, it looks for an executable file with a name that matches the command on disk. 
-*  To find out whether a command is an alias, bash internal, or executable file on disk, you can use the type command. An example why this could be important to know is e.g. there’s two time commands.One is an internal bash command, the other is an external command. So when you run time without a complete file path, it's using the internal bash command. And both commands are quite different.
+   be loaded from disk separately. An external command is a command that exists as an executable file on disk. Because it has to be read from disk the first it is 
+   a bit slower. When a user executes a command, the shell first looks to determine whether it is an bash internal command; if it is not, it looks for an 
+   executable file with a name that matches the command on disk. 
+*  To find out whether a command is an alias, bash internal, or executable file on disk, you can use the type command. An example why this could be important 
+   to know is e.g. there’s two time commands.One is an internal bash command, the other is an external command. So when you run time without a complete file 
+   path, it's using the internal bash command. And both commands are quite different.
 
 -- For security reasons the current directory is not in the $PATH variable which is why you need to start a script that's in the CWD with ./
 *  Remember $PATH for the root user has additional administration commands.
@@ -37,11 +41,13 @@ I/O REDIRECTION:
 
 
 -- STDIN (< or 0> ; file descriptor 0), STDOUT (> or 1>; file descriptor 1), STDERR (2>; file descriptor 2)
-*  someCommandThatWillFail > errorFile 2>&1 (Redirects STDERR to the same destination as STDOUT). So if there are any errors then it will get outputted to errorFile. Look at it as &1 as changing 2> to 1>
+*  someCommandThatWillFail > errorFile 2>&1 (Redirects STDERR to the same destination as STDOUT). So if there are any errors then it will get outputted 
+   to errorFile. Look at it as &1 as changing 2> to 1>
 *  ls ilwehgi Documents 2> /dev/null > newFile
 *  In this command, you redirect STDERR to /dev/null while sending STDOUT to a file with the name newFile
 
--- Programs started from the CLI have no idea what they are reading from or writing to. They just read from “file descriptor 0” if they want to read from STDIN, and they write to file descriptor number 1 to display STDOUT, and to file descriptor 2 if they have error messages to be displayed.  By default, these file descriptors are connected to the keyboard and the screen. But if you use redirection symbols such as <, >, and |, the shell connects the file descriptors to files or other commands. You can also redirect to device files. And if you want to discard a command’s output, you can redirect to /dev/null.
+-- Programs started from the CLI have no idea what they are reading from or writing to. They just read from “file descriptor 0” if they want to read from 
+STDIN, and they write to file descriptor number 1 to display STDOUT, and to file descriptor 2 if they have error messages to be displayed.  By default, these file descriptors are connected to the keyboard and the screen. But if you use redirection symbols such as <, >, and |, the shell connects the file descriptors to files or other commands. You can also redirect to device files. And if you want to discard a command’s output, you can redirect to /dev/null.
 
 
 
